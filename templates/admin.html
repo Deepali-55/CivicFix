@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard | CivicFix{% endblock %}
+{% block body_class %}admin-body{% endblock %}
+{% block content %}
+<div class="admin-shell">
+    <aside class="admin-sidebar">
+        <a class="brand admin-brand" href="{{ url_for('home') }}"><span class="brand-mark">C</span><span>Civic<span class="brand-accent">Fix</span><small>ADMIN CONSOLE</small></span></a>
+        <div class="sidebar-label">WORKSPACE</div>
+        <a class="side-link selected" href="{{ url_for('admin') }}">▦ <span>Overview</span></a>
+        <a class="side-link" href="#complaints">▤ <span>Complaints</span><b>{{ stats.total }}</b></a>
+        <a class="side-link" href="{{ url_for('home') }}">⌂ <span>View public site</span></a>
+        <div class="sidebar-label sidebar-bottom-label">SYSTEM</div>
+        <div class="sidebar-note"><span class="online-dot"></span><span><b>System operational</b><small>CivicFix local demo</small></span></div>
+        <div class="sidebar-footer">CivicFix Admin<br><small>Community services console</small>
+            <form method="POST" action="{{ url_for('admin_logout') }}" style="margin-top:12px;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" style="border:0;border-radius:8px;padding:9px 13px;background:#fee2e2;color:#991b1b;font-weight:700;cursor:pointer;">Log out</button>
+            </form>
+        </div>
+    </aside>
+    <main class="admin-main">
+        <header class="admin-topbar"><div><span class="eyebrow">CIVICFIX / ADMINISTRATION</span><h1>Dashboard overview</h1><p>Monitor and manage community reports.</p></div><a class="admin-view-site" href="{{ url_for('home') }}">↗ View website</a></header>
+        <section class="admin-welcome"><div><span class="welcome-tag">✦ CONTROL CENTRE</span><h2>Good work starts with <span>good visibility.</span></h2><p>Here is the latest overview of reports submitted through CivicFix.</p></div><div class="welcome-art">🏙️</div></section>
+        <section class="admin-stat-grid">
+            <article class="admin-stat stat-total"><div class="admin-stat-top"><span>Total complaints</span><i>▤</i></div><strong>{{ stats.total }}</strong><small>All submitted reports</small></article>
+            <article class="admin-stat stat-pending"><div class="admin-stat-top"><span>Pending</span><i>◷</i></div><strong>{{ stats.pending }}</strong><small>Awaiting review</small></article>
+            <article class="admin-stat stat-progress"><div class="admin-stat-top"><span>In progress</span><i>↗</i></div><strong>{{ stats.in_progress }}</strong><small>Being addressed</small></article>
+            <article class="admin-stat stat-resolved"><div class="admin-stat-top"><span>Resolved</span><i>✓</i></div><strong>{{ stats.resolved }}</strong><small>Marked as resolved</small></article>
+        </section>
+        <section class="admin-panel monthly-panel" style="margin:22px 0;padding:24px;border-radius:18px;background:#fff;box-shadow:0 12px 35px rgba(15,23,42,.06);">
+            <div class="panel-title"><div><span class="panel-kicker">DATABASE-BACKED TREND</span><h3>Monthly complaint activity</h3><p>Complaint submissions recorded in the latest six calendar months.</p></div></div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:14px;align-items:end;min-height:170px;">
+                {% set monthly_max = monthly|map(attribute='count')|max if monthly else 0 %}
+                {% for month in monthly %}
+                <div style="text-align:center;min-width:0;"><strong style="display:block;margin-bottom:7px;">{{ month.count }}</strong><div title="{{ month.label }}: {{ month.count }} complaints" style="height:110px;display:flex;align-items:end;background:#eff6ff;border-radius:10px;overflow:hidden;"><span style="display:block;width:100%;height:{{ (month.count / monthly_max * 100)|round if monthly_max else 0 }}%;min-height:{{ '4px' if month.count else '0' }};background:linear-gradient(180deg,#38bdf8,#4f46e5);border-radius:10px 10px 0 0;"></span></div><small style="display:block;margin-top:8px;color:#64748b;">{{ month.label }}</small></div>
+                {% endfor %}
+            </div>
+        </section>
+        <section class="admin-content-grid">
+            <div class="admin-panel category-panel"><div class="panel-title"><div><span class="panel-kicker">REPORT BREAKDOWN</span><h3>Issues by category</h3></div><span class="panel-icon">▥</span></div>
+                {% if categories %}
+                    {% set max_count = categories.values()|max %}
+                    {% for category, count in categories.items() %}
+                    <div class="bar-row"><div><span>{{ category }}</span><b>{{ count }}</b></div><div class="bar-track"><span style="width: {{ (count / max_count * 100)|round }}%"></span></div></div>
+                    {% endfor %}
+                {% else %}<p class="empty-state">Category insights will appear when reports are submitted.</p>{% endif %}
+            </div>
+            <div class="admin-panel health-panel"><span class="panel-kicker">WORKFLOW SNAPSHOT</span><h3>Complaint progress</h3><div class="health-ring" style="--resolved: {{ (stats.resolved / stats.total * 100)|round if stats.total else 0 }}%"><div><strong>{{ (stats.resolved / stats.total * 100)|round if stats.total else 0 }}%</strong><small>resolved</small></div></div><p><span class="legend-dot resolved-dot"></span> Resolved <b>{{ stats.resolved }}</b></p><p><span class="legend-dot pending-dot"></span> Pending <b>{{ stats.pending }}</b></p><p><span class="legend-dot progress-dot"></span> In progress <b>{{ stats.in_progress }}</b></p></div>
+        </section>
+        <section class="admin-panel complaint-panel" id="complaints">
+            <div class="complaint-heading"><div><span class="panel-kicker">CITIZEN SUBMISSIONS</span><h3>Complaint management</h3><p>Review reports and update their current status.</p></div><div class="admin-actions"><a class="record-count" href="{{ url_for('export_reports') }}">⬇ Export CSV</a><a class="record-count" href="{{ url_for('export_pdf') }}">⬇ Export PDF</a><span class="record-count">{{ stats.total }} records</span></div></div>
+            <div class="table-tools"><input id="tableSearch" type="search" placeholder="⌕ Search name, category, location or ID..."><select id="statusFilter"><option value="">All statuses</option><option>Pending</option><option>In Progress</option><option>Resolved</option><option>Rejected</option></select><select id="categoryFilter"><option value="">All categories</option>{% for category in categories.keys() %}<option>{{ category }}</option>{% endfor %}</select></div>
+            <div class="table-wrap"><table class="admin-table" id="complaintTable"><thead><tr><th>ID</th><th>Citizen</th><th>Issue</th><th>Location & details</th><th>Photo</th><th>Status</th><th>Admin remarks & status</th></tr></thead><tbody>
+                {% for report in reports %}
+                <tr data-status="{{ report.status }}" data-category="{{ report.category }}">
+                    <td><span class="id-pill">#{{ report.id }}</span></td><td><b>{{ report.name }}</b><small class="cell-sub">Citizen report</small></td><td><span class="category-pill">{{ report.category }}</span></td><td><b>{{ report.location }}</b><small class="cell-sub description-cell">{{ report.description }}</small></td>
+                    <td>{% if report.photo %}<a href="{{ url_for('uploaded_file', filename=report.photo) }}" target="_blank"><img class="admin-thumb" src="{{ url_for('uploaded_file', filename=report.photo) }}" alt="Issue photo"></a>{% else %}<span class="no-photo">No image</span>{% endif %}</td>
+                    <td><span class="status-badge {{ report.status|lower|replace(' ', '-') }}">{{ report.status }}</span></td>
+                    <td><form class="status-form" action="{{ url_for('update_status', report_id=report.id) }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <select name="status" aria-label="Update status for complaint {{ report.id }}"><option value="Pending" {% if report.status == 'Pending' %}selected{% endif %}>Pending</option><option value="In Progress" {% if report.status == 'In Progress' %}selected{% endif %}>In Progress</option><option value="Resolved" {% if report.status == 'Resolved' %}selected{% endif %}>Resolved</option><option value="Rejected" {% if report.status == 'Rejected' %}selected{% endif %}>Rejected</option></select>
+                    <input name="admin_remarks" maxlength="1000" placeholder="Add admin remarks" value="{{ report.admin_remarks or '' }}" aria-label="Admin remarks for complaint {{ report.id }}">
+                    <button type="submit">Save update</button></form></td>
+                </tr>
+                {% else %}
+                <tr><td colspan="7"><div class="empty-state table-empty"><span>▤</span><b>No complaints yet</b><small>New citizen submissions will appear here.</small><a href="{{ url_for('report') }}">Open report form →</a></div></td></tr>
+                {% endfor %}
+            </tbody></table></div>
+            <div class="no-filter-results" id="noFilterResults" hidden>No matching complaints. Try another search or filter.</div>
+        </section>
+        <section class="admin-panel complaint-panel"><div class="complaint-heading"><div><span class="panel-kicker">REGISTERED CITIZENS</span><h3>User accounts</h3><p>{{ users|length }} registered accounts</p></div></div><div class="table-wrap"><table class="admin-table"><thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Joined</th></tr></thead><tbody>{% for user in users %}<tr><td>#{{ user.id }}</td><td>{{ user.name }}</td><td>{{ user.email }}</td><td>{{ user.created_at }}</td></tr>{% else %}<tr><td colspan="4">No citizen accounts yet.</td></tr>{% endfor %}</tbody></table></div></section>
+        <footer class="admin-footer">CivicFix Administration Console <span>Local demonstration interface · 2026</span></footer>
+    </main>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const searchBox = document.getElementById("tableSearch");
+const statusFilter = document.getElementById("statusFilter");
+const categoryFilter = document.getElementById("categoryFilter");
+const rows = [...document.querySelectorAll("#complaintTable tbody tr[data-status]")];
+function filterRows() {
+    const query = (searchBox.value || "").toLowerCase();
+    const status = statusFilter.value;
+    const category = categoryFilter.value;
+    let visible = 0;
+    rows.forEach(row => {
+        const matchesText = row.innerText.toLowerCase().includes(query);
+        const matchesStatus = !status || row.dataset.status === status;
+        const matchesCategory = !category || row.dataset.category === category;
+        const show = matchesText && matchesStatus && matchesCategory;
+        row.hidden = !show;
+        if (show) visible++;
+    });
+    document.getElementById("noFilterResults").hidden = visible !== 0 || rows.length === 0;
+}
+searchBox.addEventListener("input", filterRows);
+statusFilter.addEventListener("change", filterRows);
+categoryFilter.addEventListener("change", filterRows);
+</script>
+{% endblock %}

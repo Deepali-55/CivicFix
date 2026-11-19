@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}CivicFix | Your City, Your Voice{% endblock %}
+{% block body_class %}site-body{% endblock %}
+{% block content %}
+<header class="site-header">
+    <a class="brand" href="{{ url_for('home') }}"><span class="brand-mark">C</span><span>Civic<span class="brand-accent">Fix</span><small>YOUR CITY. YOUR VOICE.</small></span></a>
+    <button class="menu-toggle" aria-label="Open navigation" onclick="document.querySelector('.nav-links').classList.toggle('nav-open')">☰</button>
+    <nav class="nav-links">
+        <a class="active" href="{{ url_for('home') }}">Home</a>
+        <a href="#services">Services</a>
+        <a href="#about">About</a>
+        <a href="{{ url_for('report') }}">Report Issue</a>
+        <a href="{{ url_for('track') }}">Track Complaint</a>
+        {% if logged_in_user %}<a href="{{ url_for('user_dashboard') }}">My Dashboard</a>{% else %}<a href="{{ url_for('user_login') }}">Citizen Login</a><a href="{{ url_for('register') }}">Register</a>{% endif %}
+        <a class="nav-admin" href="{{ url_for('admin_login') }}">Admin ↗</a>
+    </nav>
+</header>
+
+<main>
+<section class="hero">
+    <div class="hero-orb orb-one"></div><div class="hero-orb orb-two"></div>
+    <div class="hero-content">
+        <div class="eyebrow light-eyebrow"><span class="pulse-dot"></span> SMARTER CITIES START WITH YOU</div>
+        <h1>Make your city<br><span>better, together.</span></h1>
+        <p>Report civic issues, follow their progress, and help build cleaner, safer and smarter communities.</p>
+        <div class="hero-actions">
+            <a class="btn btn-cyan" href="{{ url_for('report') }}">＋ Report an Issue</a>
+            <a class="btn btn-glass" href="{{ url_for('track') }}">Track Complaint <span>→</span></a>
+        </div>
+        <div class="hero-trust"><span class="trust-icon">✓</span> Your voice matters. Every report makes a difference.</div>
+    </div>
+    <div class="hero-visual" aria-label="Smart city illustration">
+        <div class="city-card">
+            <div class="city-top"><span>LIVE CITY OVERVIEW</span><span class="live-pill">● DEMO</span></div>
+            <div class="city-art">
+                <div class="sun"></div><div class="cloud cloud-a"></div><div class="cloud cloud-b"></div>
+                <div class="building b1"></div><div class="building b2"></div><div class="building b3"></div><div class="building b4"></div>
+                <div class="road"><span></span><span></span><span></span></div>
+                <div class="tree tree-a">♣</div><div class="tree tree-b">♣</div>
+                <div class="pin pin-a">⌖</div><div class="pin pin-b">⌖</div>
+            </div>
+            <div class="city-bottom"><div><b>Community powered</b><small>Small actions. Big impact.</small></div><div class="city-check">✓</div></div>
+        </div>
+        <div class="float-chip chip-top">✦ Civic engagement</div>
+        <div class="float-chip chip-bottom"><span class="chip-dot"></span> Building a better tomorrow</div>
+    </div>
+    <div class="hero-wave"></div>
+</section>
+
+<section class="stats-strip">
+    <div class="stat-mini"><span class="stat-icon blue">▤</span><div><strong>{{ stats.total }}</strong><small>Total complaints</small></div></div>
+    <div class="stat-mini"><span class="stat-icon green">✓</span><div><strong>{{ stats.resolved }}</strong><small>Resolved complaints</small></div></div>
+    <div class="stat-mini"><span class="stat-icon orange">◷</span><div><strong>{{ stats.pending }}</strong><small>Pending complaints</small></div></div>
+    <div class="stat-mini"><span class="stat-icon purple">↗</span><div><strong>{{ stats.in_progress }}</strong><small>In progress</small></div></div>
+</section>
+
+<section class="section-wrap" id="services">
+    <div class="section-heading"><div><div class="eyebrow">WHAT WE HELP WITH</div><h2>Services built around <span>your community.</span></h2></div><p>From safer roads to cleaner neighbourhoods, report the issues that matter.</p></div>
+    <div class="service-grid">
+        <article class="service-card service-blue"><div class="service-icon">⌁</div><span class="service-number">01</span><h3>Road Damage</h3><p>Report potholes, damaged roads and unsafe streets.</p><a href="{{ url_for('report') }}">Report issue <b>→</b></a></article>
+        <article class="service-card service-green"><div class="service-icon">♻</div><span class="service-number">02</span><h3>Garbage Collection</h3><p>Help keep public spaces clean and waste-free.</p><a href="{{ url_for('report') }}">Report issue <b>→</b></a></article>
+        <article class="service-card service-orange"><div class="service-icon">☼</div><span class="service-number">03</span><h3>Streetlight Issues</h3><p>Flag broken lights and poorly lit public areas.</p><a href="{{ url_for('report') }}">Report issue <b>→</b></a></article>
+        <article class="service-card service-purple"><div class="service-icon">≋</div><span class="service-number">04</span><h3>Water Leakage</h3><p>Report leaks and water supply concerns.</p><a href="{{ url_for('report') }}">Report issue <b>→</b></a></article>
+        <article class="service-card service-cyan"><div class="service-icon">＋</div><span class="service-number">05</span><h3>Other Services</h3><p>Share other civic concerns with the team.</p><a href="{{ url_for('report') }}">Report issue <b>→</b></a></article>
+    </div>
+</section>
+
+<section class="about-band" id="about">
+    <div class="about-illustration"><div class="about-circle"><div class="about-city">🏙️</div><span class="about-spark spark-a">✦</span><span class="about-spark spark-b">✧</span></div></div>
+    <div class="about-copy"><div class="eyebrow light-eyebrow">ABOUT CIVICFIX</div><h2>A better city begins with a <span>better connection.</span></h2><p>CivicFix is a community-focused public complaint platform. It gives citizens a simple way to report local issues and track updates, helping make civic communication clearer and more accessible.</p>
+        <div class="about-points"><div><b>◎</b><span><strong>Our mission</strong><small>Make reporting public issues simple.</small></span></div><div><b>✧</b><span><strong>Our vision</strong><small>Build cleaner, safer communities together.</small></span></div><div><b>↗</b><span><strong>Our objective</strong><small>Improve visibility and accountability.</small></span></div></div>
+    </div>
+</section>
+
+<section class="steps-section">
+    <div class="section-heading centered"><div><div class="eyebrow">SIMPLE PROCESS</div><h2>Three steps to make <span>an impact.</span></h2></div></div>
+    <div class="steps-grid"><div class="step-card"><div class="step-icon">✎</div><span>STEP 01</span><h3>Report an issue</h3><p>Tell us what needs attention and where it is happening.</p></div><div class="step-card"><div class="step-icon">⌕</div><span>STEP 02</span><h3>Track progress</h3><p>Use your tracking ID to check the latest complaint status.</p></div><div class="step-card"><div class="step-icon">✓</div><span>STEP 03</span><h3>See the update</h3><p>Follow the status as your complaint moves forward.</p></div></div>
+</section>
+<section class="cta-band"><div><div class="eyebrow light-eyebrow">YOUR CITY NEEDS YOUR VOICE</div><h2>See something? Say something.</h2><p>Take a moment to report a civic issue today.</p></div><a class="btn btn-white" href="{{ url_for('report') }}">Get started <span>→</span></a></section>
+</main>
+<footer class="site-footer"><a class="brand footer-brand" href="{{ url_for('home') }}"><span class="brand-mark">C</span><span>Civic<span class="brand-accent">Fix</span><small>YOUR CITY. YOUR VOICE.</small></span></a><p>Making civic participation simpler, one report at a time.</p><div class="footer-links"><a href="#services">Services</a><a href="#about">About</a><a href="{{ url_for('report') }}">Report Issue</a><a href="{{ url_for('track') }}">Track</a></div><small>© 2026 CivicFix. Community-focused civic reporting platform.</small></footer>
+{% endblock %}

@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}Report an Issue | CivicFix{% endblock %}
+{% block body_class %}inner-body report-body{% endblock %}
+{% block content %}
+<header class="site-header compact-header">
+    <a class="brand" href="{{ url_for('home') }}"><span class="brand-mark">C</span><span>Civic<span class="brand-accent">Fix</span><small>YOUR CITY. YOUR VOICE.</small></span></a>
+    <nav class="nav-links"><a href="{{ url_for('home') }}">Home</a><a href="{{ url_for('home') }}#services">Services</a><a class="active" href="{{ url_for('report') }}">Report Issue</a><a href="{{ url_for('track') }}">Track Complaint</a></nav>
+</header>
+<main class="form-page">
+    <div class="form-intro"><div class="eyebrow">CITIZEN REPORTING PORTAL</div><h1>Let's make things <span>better.</span></h1><p>Share the details of the issue. Your report helps bring attention to what matters in your community.</p><div class="form-benefit"><span>✓</span> Simple reporting <span>✓</span> Trackable updates <span>✓</span> Community impact</div></div>
+    <div class="form-layout">
+        <aside class="form-side"><div class="side-art">🏙️</div><h3>Your city.<br>Your voice.</h3><p>Every useful report is a step toward a cleaner, safer and more connected neighbourhood.</p><div class="side-note"><span>✦</span> Please provide accurate details so the issue can be understood clearly.</div></aside>
+        <section class="form-panel">
+            <div class="panel-heading"><div><span class="panel-kicker">NEW COMPLAINT</span><h2>Report an issue</h2><p>Fields marked * are required.</p></div><span class="panel-icon">✎</span></div>
+            {% if error %}<div class="alert alert-error">⚠ {{ error }}</div>{% endif %}
+            {% if duplicate_id %}<div class="alert alert-error" role="alert">A similar complaint (ID #{{ duplicate_id }}) with the same category and location was submitted in the last 24 hours. If this is a separate issue, confirm below and continue.</div>{% endif %}
+            <form method="POST" enctype="multipart/form-data" id="reportForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <label for="name">Your name <span>*</span></label>
+                <input type="text" id="name" name="name" value="{{ form_values.get('name', '') if form_values else '' }}" placeholder="Enter your full name" required>
+                <label for="category">Issue category <span>*</span></label>
+                <select id="category" name="category" required><option value="">Choose an issue category</option><option {% if form_values and form_values.get('category') == 'Road Damage' %}selected{% endif %}>Road Damage</option><option {% if form_values and form_values.get('category') == 'Garbage' %}selected{% endif %}>Garbage</option><option {% if form_values and form_values.get('category') == 'Streetlight' %}selected{% endif %}>Streetlight</option><option {% if form_values and form_values.get('category') == 'Water Leakage' %}selected{% endif %}>Water Leakage</option><option {% if form_values and form_values.get('category') == 'Other' %}selected{% endif %}>Other</option></select>
+                <div id="aiSuggestion" class="ai-suggestion" role="status" aria-live="polite">✨ AI category suggestion will appear after you describe the issue.</div>
+                <label for="location">Issue location <span>*</span></label>
+                <input type="text" id="location" name="location" value="{{ form_values.get('location', '') if form_values else '' }}" placeholder="Street, area or nearby landmark" required>
+                <label for="description">Describe the issue <span>*</span></label>
+                <textarea id="description" name="description" rows="5" placeholder="Explain what happened and where..." required>{{ form_values.get('description', '') if form_values else '' }}</textarea>
+                <label for="photo">Attach an image <small>(optional · JPG, JPEG, PNG or WEBP · max 5 MB)</small></label>
+                <div class="upload-box"><input type="file" id="photo" name="photo" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"><div id="fileFeedback" class="file-feedback">▧ Choose an image to support your report</div><img id="imagePreview" class="image-preview" alt="Selected image preview" hidden></div>
+                <div id="clientError" class="alert alert-error" hidden></div>
+                {% if duplicate_id %}<label class="duplicate-confirm"><input type="checkbox" name="confirm_possible_duplicate" value="yes" required> I confirm this is a separate complaint.</label>{% endif %}
+                <button class="btn btn-submit" type="submit">Submit complaint <span>→</span></button>
+                <p class="form-footnote">Your complaint will receive a unique tracking ID after submission.</p>
+            </form>
+        </section>
+    </div>
+</main>
+<footer class="simple-footer">© 2026 CivicFix · Building better communities together</footer>
+{% endblock %}
+{% block scripts %}
+<script>
+const photoInput = document.getElementById("photo");
+const feedback = document.getElementById("fileFeedback");
+const preview = document.getElementById("imagePreview");
+const clientError = document.getElementById("clientError");
+const form = document.getElementById("reportForm");
+const descriptionInput = document.getElementById("description");
+const categorySelect = document.getElementById("category");
+const aiSuggestion = document.getElementById("aiSuggestion");
+const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+let suggestionTimer;
+let lastSuggestedDescription = "";
+const allowed = ["image/jpeg", "image/png", "image/webp"];
+descriptionInput.addEventListener("input", () => {
+    clearTimeout(suggestionTimer);
+    const text = descriptionInput.value.trim();
+    if (text.length < 8) {
+        aiSuggestion.textContent = "✨ AI category suggestion will appear after you describe the issue.";
+        return;
+    }
+    suggestionTimer = setTimeout(async () => {
+        if (text === lastSuggestedDescription) return;
+        lastSuggestedDescription = text;
+        aiSuggestion.textContent = "✨ Analysing your description...";
+        try {
+            const response = await fetch("/api/suggest-category", {
+                method: "POST",
+                headers: {"Content-Type": "application/json", "X-CSRF-Token": csrfToken},
+                body: JSON.stringify({description: text})
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || "Suggestion unavailable");
+            if (data.suggestion) {
+                aiSuggestion.textContent = "✨ AI suggests: " + data.suggestion + ". " + data.message;
+                if (!categorySelect.value) categorySelect.value = data.suggestion;
+            } else {
+                aiSuggestion.textContent = "✨ " + (data.message || "Please choose a category manually.");
+            }
+        } catch (error) {
+            aiSuggestion.textContent = "✨ AI suggestion is temporarily unavailable. Please choose a category manually.";
+        }
+    }, 500);
+});
+photoInput.addEventListener("change", () => {
+    clientError.hidden = true;
+    preview.hidden = true;
+    const file = photoInput.files[0];
+    if (!file) { feedback.textContent = "▧ Choose an image to support your report"; return; }
+    if (!allowed.includes(file.type) || !/\.(jpg|jpeg|png|webp)$/i.test(file.name)) {
+        photoInput.value = "";
+        feedback.textContent = "No image selected";
+        clientError.textContent = "Unsupported image format. Please choose JPG, JPEG, PNG or WEBP.";
+        clientError.hidden = false;
+        return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+        photoInput.value = "";
+        feedback.textContent = "No image selected";
+        clientError.textContent = "The image is larger than 5 MB. Please choose a smaller image.";
+        clientError.hidden = false;
+        return;
+    }
+    feedback.textContent = "Selected: " + file.name;
+    preview.src = URL.createObjectURL(file);
+    preview.hidden = false;
+});
+form.addEventListener("submit", (event) => {
+    const file = photoInput.files[0];
+    if (file && (!allowed.includes(file.type) || file.size > 5 * 1024 * 1024)) {
+        event.preventDefault();
+        clientError.textContent = "Please select a supported image under 5 MB.";
+        clientError.hidden = false;
+    }
+});
+</script>
+{% endblock %}
