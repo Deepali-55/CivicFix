@@ -131,3 +131,16 @@ Before pushing to GitHub, exclude `venv/`, `__pycache__/`, `civicfix.db`, `uploa
 
 ## Final verification and remaining integrations
 See `docs/REMAINING_IMPLEMENTATION_AND_VERIFICATION.md` for the full local acceptance checklist, monthly analytics and duplicate-warning details, and integrations that require external provider credentials (email/SMS, maps, CAPTCHA).
+## Project Screenshots
+
+### 1. Home Page
+![Home Page](screenshots/home.png)
+
+### 2. Citizen Dashboard
+![Citizen Dashboard](screenshots/citizen-dashboard.png)
+
+### 3. Admin Dashboard
+![Admin Dashboard](screenshots/admin-dashboard.png)
+
+### 4. Complaint Tracking
+![Complaint Tracking](screenshots/complaint-tracking.png)
